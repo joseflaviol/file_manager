@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <title></title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      {% if user %}
+      <form method="get" action="{% url 'search_user_files' user.id %}">
+      {% else %}
+      <form method="get" action="{% url 'search_all_files' %}">
+      {% endif %}
+        <div class="form-group">
+          <label for="search_file">Busque por arquivos</label>
+          {% if search %}
+          <input type="text" name="search" class="form-control" id="search_file" value="{{search}}">
+          {% else %}
+          <input type="text" name="search" class="form-control" id="search_file" placeholder="Digite o nome do arquivo aqui...">
+          {% endif %}
+        </div>
+      </form>
+      {% if search %}
+      <p>Você buscou por: <strong>{{search}}</strong></p>
+      {% endif %}
+      {% if user_files%}
+      <p>Arquivos enviados por você, que são resultados da busca: </p>
+      <div class="row">
+        {% for file in user_files %}
+        <div class="card m-3" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">{{file.name}}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Enviado por: {{file.uploaded_by.first_name}}</h6>
+            <a href="{% url 'view_file' file.id %}" class="card-link" target="_blank">Ver</a>
+            <a href="{% url 'download_file' file.id %}" class="card-link">Baixar</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <hr>
+      <p>Todos resultados: </p>
+      {% else %}
+      Diretório: {{state_folder.name}}<br>
+      {% for folder in folders %}
+      <a href="{% url 'files' user.id folder.id %}">{{folder.name}}</a>
+      {% endfor %}
+      {% endif %}
+      <div class="row">
+        {% for file in files %}
+        <div class="card m-3" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">{{file.name}}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Enviado por: {{file.uploaded_by.first_name}}</h6>
+            <a href="{% url 'view_file' file.id %}" class="card-link" target="_blank">Ver</a>
+            <a href="{% url 'download_file' file.id %}" class="card-link">Baixar</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <script src="{% static 'js/jquery.min.js' %}" charset="utf-8"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}" charset="utf-8"></script>
+  </body>
+</html>
