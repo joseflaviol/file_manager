@@ -82,17 +82,35 @@ class CreateFolderView(View):
     def post(self, request):
         under = request.POST['under']
         name = request.POST['name']
-        f = Folder(name=name, owner=request.user, under=under)
+        f = Folder(name=name, owner=request.user, under=int(under))
         f.save()
         return redirect('/files/' + str(request.user.id) + '/0')
+
+def folders_path(folder):
+    a = []
+    while folder.under != 0:
+        a.append({'name': folder.name, 'link': f"/files/{folder.owner.id}/{folder.id}"})
+        folder = Folder.objects.get(id=folder.under)
+    a.append({'name': folder.name, 'link': f"/files/{folder.owner.id}/{folder.id}"})
+    a.append({'name': 'Raiz', 'link': f"/files/{folder.owner.id}/0"})
+    a = reversed(a)
+    return a
+    #if int(folder) == 0:
+    #    return []
+    #folder = Folder.objects.get(id=int(folder))
+    #print({'name': folder.name, 'link': f"/files/{folder.owner.id}/{folder.id}"})
+    #return folders_path(folder.under).append({'name': folder.name, 'link': f"/files/{folder.owner.id}/{folder.id}"})
 
 def files(request, id, folder):
     folders = Folder.objects.filter(owner=id, under=folder)
     state_folder = None
+    folders_p = []
     if folder == 0:
         state_folder = {'name': 'Raiz'}
+        folders_p.append({'name': 'Raiz', 'link': f"/files/{id}/{folder}"})
     else:
         state_folder = Folder.objects.get(id=folder)
+        folders_p = folders_path(state_folder)
     files = None
     user = None
     if id == request.user.id:
@@ -100,14 +118,16 @@ def files(request, id, folder):
         files = File.objects.filter(uploaded_by=id, under=folder)
     else:
         files = File.objects.filter(uploaded_by=id, privacity=1, under=folder)
-    return render(request, 'arquivos.html', {'user': user, 'state_folder': state_folder, 'folders': folders, 'files': files})
+    return render(request, 'arquivos.html', {'user': user, 'folders_p': folders_p, 'folders': folders, 'files': files})
 
 def view_file(request, id):
     file = File.objects.get(id=id)
     if request.user.is_authenticated and (file.privacity == "1" or file.uploaded_by_id == request.user.id):
         file_path = 'app/users/' + str(file.uploaded_by_id) + '/' + file.name_in_dir
         f = open(file_path, 'rb')
+        #print(file.name_in_dir)
         response = FileResponse(f)
+        #print(str(response.filename))
         return response
     else:
         return HttpResponse('file is not avaliable for you.')
@@ -118,6 +138,7 @@ def download_file(request, id):
         file_path = 'app/users/' + str(file.uploaded_by_id) + '/' + file.name_in_dir
         f = open(file_path, 'rb')
         response = FileResponse(f, content_type='application/force-download')
+        #response['Content-Disposition'] = 'inline; filename=' + file.name_in_dir
         return response
     else:
         return HttpResponse('file is not avaliable for you.')
