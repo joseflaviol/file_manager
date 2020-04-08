@@ -42,10 +42,17 @@
       <hr>
       <p>Todos resultados: </p>
       {% else %}
-      Diretório: {{state_folder.name}}<br>
-      {% for folder in folders %}
-      <a href="{% url 'files' user.id folder.id %}">{{folder.name}}</a>
-      {% endfor %}
+      Diretório: {% for folder in folders_p %} / <a href="{{folder.link}}">{{folder.name}}</a> {% endfor %}<br>
+      <div class="row">
+        {% for folder in folders %}
+        <div class="card m-3" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">{{folder.name}}</h5>
+            <a href="{% url 'files' user.id folder.id %}" class="card-link">Entrar</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
       {% endif %}
       <div class="row">
         {% for file in files %}
